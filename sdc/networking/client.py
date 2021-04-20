@@ -24,16 +24,14 @@ class NetworkingClient:
         proxy = self.bus.get_object("org.freedesktop.NetworkManager", "/org/freedesktop/NetworkManager/Settings")
         settings = dbus.Interface(proxy, "org.freedesktop.NetworkManager.Settings")
         conns = []
-        for conn in settings.ListConnections():
-            con_proxy = self.bus.get_object("org.freedesktop.NetworkManager", conn)
-            settings_connection = dbus.Interface(
-                    con_proxy, "org.freedesktop.NetworkManager.Settings.Connection"
-            )
-            sett = settings_connection.GetSettings()
-            uuid = sett["connection"]["uuid"]
-            if(uuidToSearch == uuid):
-                return {"uuid": uuid, "path": conn, "settings": sett}
-        return None
+        conn = settings.GetConnectionByUuid(uuidToSearch)
+        con_proxy = self.bus.get_object("org.freedesktop.NetworkManager", conn)
+        settings_connection = dbus.Interface(
+                con_proxy, "org.freedesktop.NetworkManager.Settings.Connection"
+        )
+        sett = settings_connection.GetSettings()
+        uuid = sett["connection"]["uuid"]
+        return {"uuid": uuid, "path": conn, "settings": sett}
     
     def getConnectionPathByUuid(self, uuid):
         conns = self.getConnections()
@@ -47,14 +45,6 @@ class NetworkingClient:
         nm = dbus.Interface(proxy, "org.freedesktop.NetworkManager")
         connPath = self.getConnectionPathByUuid(uuid)
         nm.DeactivateConnection(connPath)
-
-    def activateWirelessConnectionByUuid(self, uuid, deviceName="wlan0"):
-        proxy = self.bus.get_object("org.freedesktop.NetworkManager", "/org/freedesktop/NetworkManager")
-        nm = dbus.Interface(proxy, "org.freedesktop.NetworkManager")
-        devicePath = nm.GetDeviceByIpIface(deviceName)
-        connPath = self.getConnectionPathByUuid(uuid)
-        nm.ActivateConnection(connPath, devicePath, "/")
-
     
     def getActiveConnections(self):
         proxy = self.bus.get_object("org.freedesktop.NetworkManager", "/org/freedesktop/NetworkManager")
