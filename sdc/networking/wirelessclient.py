@@ -16,6 +16,71 @@ class WirelessClient:
     def getDeviceProxy(self):
         return self.bus.get_object("org.freedesktop.NetworkManager", self.device["devicePath"])
 
+    def getDeviceName(self):
+        dev_proxy = self.getDeviceProxy()
+        iface = dbus.Interface(dev_proxy, "org.freedesktop.NetworkManager.Device")
+        prop_iface = dbus.Interface(dev_proxy, "org.freedesktop.DBus.Properties")
+        return prop_iface.Get("org.freedesktop.NetworkManager.Device", "Interface")
+
+    def getConnections(self):
+        wifi_iface, wifi_prop_iface = self.getWiFiIface()
+        connections = wifi_prop_iface.Get("org.freedesktop.NetworkManager.Device", "AvailableConnections")
+        conns = []
+        for conn in connections:
+            con_proxy = self.bus.get_object("org.freedesktop.NetworkManager", conn)
+            settings_connection = dbus.Interface(
+                    con_proxy, "org.freedesktop.NetworkManager.Settings.Connection"
+            )
+            sett = settings_connection.GetSettings()
+            uuid = sett["connection"]["uuid"]
+            if(sett.get("802-11-wireless", None) and sett["802-11-wireless"].get("ssid", None)):
+                sett["802-11-wireless"]["ssid"] = "".join(chr(x) for x in sett["802-11-wireless"]["ssid"])
+            conns.append({"uuid": uuid, "path": conn, "settings": sett})
+            
+        return conns
+
+         
+
+    def addWifiConnection(self, ssid, password, uid, priority = 100, autoConnect = True):
+        s_con = dbus.Dictionary({
+            'type': '802-11-wireless',
+            'uuid': uid,
+            'id': ssid,
+            "autoconnect-priority": dbus.Int32(priority),
+            "autoconnect": dbus.Boolean(autoConnect),
+            'interface-name': self.getDeviceName()
+        })
+
+        s_wifi = dbus.Dictionary({
+            'ssid': dbus.ByteArray(ssid.encode("utf8")),
+            'mode': 'infrastructure',
+            'hidden': dbus.Boolean(True),
+        })
+
+        s_wsec = dbus.Dictionary({
+            'key-mgmt': 'wpa-psk',
+            'auth-alg': 'open',
+            'psk': password,
+        })
+
+        s_ip4 = dbus.Dictionary({'method': 'auto'})
+        s_ip6 = dbus.Dictionary({'method': 'auto'})
+
+        con = dbus.Dictionary({
+            'connection': s_con,
+            '802-11-wireless': s_wifi,
+            '802-11-wireless-security': s_wsec,
+            'ipv4': s_ip4,
+            'ipv6': s_ip6
+        })
+
+
+
+        proxy = self.bus.get_object("org.freedesktop.NetworkManager", "/org/freedesktop/NetworkManager/Settings")
+        settings = dbus.Interface(proxy, "org.freedesktop.NetworkManager.Settings")
+        settings.AddConnection(con)
+
+
     def getWiFiIface(self):
         dev_proxy = self.getDeviceProxy()
         wifi_iface = dbus.Interface(dev_proxy, "org.freedesktop.NetworkManager.Device.Wireless")
@@ -28,7 +93,8 @@ class WirelessClient:
             'uuid': uid,
             'id': ssid,
             "autoconnect-priority": dbus.Int32(priority),
-            "autoconnect": dbus.Boolean(autoConnect)
+            "autoconnect": dbus.Boolean(autoConnect),
+            'interface-name': self.getDeviceName()
         })
 
         s_wifi = dbus.Dictionary({
@@ -41,7 +107,7 @@ class WirelessClient:
         s_wsec = dbus.Dictionary({
             'key-mgmt': 'wpa-psk',
             'auth-alg': 'open',
-            'psk': password,
+            'psk': password
         })
 
         addr1 = dbus.Dictionary({"address": "111.111.111.1", "prefix": dbus.UInt32(24)})

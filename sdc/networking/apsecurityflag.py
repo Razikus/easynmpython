@@ -10,7 +10,7 @@ class APSecurityFlag(ByteFlagEnum):
     GROUP_WEP104 = 0x20
     GROUP_TKIP = 0x40
     GROUP_CCMP = 0x80
-    KEy_MGMT_PSK = 0x100
+    KEY_MGMT_PSK = 0x100
     KEY_MGMT_802_1X = 0x200
     KEY_MGMT_SAE = 0x400
     KEY_MGMT_OWE = 0x800
