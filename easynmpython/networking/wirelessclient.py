@@ -6,6 +6,7 @@ from .apmode import APModeFlag
 from .apflag import APFlag
 from .client import NetworkingClient
 import time
+import asyncio
 
 class WirelessClient:
     def __init__(self, bus, device):
@@ -178,14 +179,43 @@ class WirelessClient:
         else:
             return False
 
-    def scanAndWait(self):
+    def scanAndWait(self, maxWait = 10):
         lastScan = self.getLastScanOfWireless()
         oldLastScan = lastScan
+        waiting = 0
         while self.requestWirelessScan() == False:
             time.sleep(1)
+            waiting = waiting + 1
+            if(waiting >= maxWait):
+                raise Exception("Too long to wait")
+        waiting = 0
         while oldLastScan == lastScan:
             time.sleep(0.1)
             lastScan = self.getLastScanOfWireless()
+            waiting = waiting + 0.1
+            if(waiting >= maxWait):
+                raise Exception("Too long to wait")
+        aps = self.getAccessPoints()
+        return aps
+    
+
+    async def scanAndWaitAsync(self, maxWait = 10):
+        lastScan = self.getLastScanOfWireless()
+        oldLastScan = lastScan
+        waiting = 0
+        while self.requestWirelessScan() == False:
+            await asyncio.sleep(1)
+            waiting = waiting + 1
+            if(waiting >= maxWait):
+                raise Exception("Too long to wait")
+        waiting = 0
+        while oldLastScan == lastScan:
+            await asyncio.sleep(0.1)
+            lastScan = self.getLastScanOfWireless()
+            waiting = waiting + 0.1
+            if(waiting >= maxWait):
+                raise Exception("Too long to wait")
+
         aps = self.getAccessPoints()
         return aps
 
@@ -200,7 +230,23 @@ class WirelessClient:
                 aps = self.scanAndWait()
                 aps = self.scanAndWait()
             except Exception as e:
-                print(e)
+                pass
+            self.activateConnectionByUuid(uuidOf)
+            self.enableAutoconnectOnDevice()
+            return aps
+        else:
+            return self.scanAndWait()
+
+    async def scanInAccessPointModeAsync(self):
+        if(self.isCurrentConnectionHotSpot()):
+            uuidOf = self.getCurrentConnectionUuid()
+            self.disableAutoconnectOnDevice()
+            self.deactivateCurrentConnection()
+            aps = []
+            try:
+                aps = await self.scanAndWaitAsync()
+                aps = await self.scanAndWaitAsync()
+            except Exception as e:
                 pass
             self.activateConnectionByUuid(uuidOf)
             self.enableAutoconnectOnDevice()
