@@ -35,4 +35,4 @@ uuider = "3fb431e3-250e-4bc2-886e-d8705ea25661"
 # aps = wireless.scanInAccessPointMode()
 # print(aps)
 # print(wireless.getDeviceName())
-# print(json.dumps(wireless.getConnections()))
+print(json.dumps(wireless.getConnections()))
