@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="easynmpython",
-    version="1.0.0",
+    version="1.0.2",
     author="Adam Raźniewski",
     author_email="adam@razniewski.eu",
     description="Easy NetworkManager DBUS",
