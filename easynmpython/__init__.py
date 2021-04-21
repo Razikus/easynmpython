@@ -1,2 +1,2 @@
-from networking import *
+from .networking import *
 name = "easynmpython"

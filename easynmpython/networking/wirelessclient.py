@@ -16,11 +16,33 @@ class WirelessClient:
     def getDeviceProxy(self):
         return self.bus.get_object("org.freedesktop.NetworkManager", self.device["devicePath"])
 
+    def getDeviceProxyAndIface(self):
+        proxy = self.getDeviceProxy()
+        iface = dbus.Interface(proxy, "org.freedesktop.NetworkManager.Device")
+        return proxy, iface
+
     def getDeviceName(self):
-        dev_proxy = self.getDeviceProxy()
-        iface = dbus.Interface(dev_proxy, "org.freedesktop.NetworkManager.Device")
+        dev_proxy, iface = self.getDeviceProxyAndIface()
         prop_iface = dbus.Interface(dev_proxy, "org.freedesktop.DBus.Properties")
         return prop_iface.Get("org.freedesktop.NetworkManager.Device", "Interface")
+
+    def getAutoconnectOnDevice(self):
+        dev_proxy, iface = self.getDeviceProxyAndIface()
+        prop_iface = dbus.Interface(dev_proxy, "org.freedesktop.DBus.Properties")
+        return prop_iface.Get("org.freedesktop.NetworkManager.Device", "Autoconnect") == 1
+
+    def enableAutoconnectOnDevice(self):
+        self.setAutoconnectOnDevice(True)
+
+    def disableAutoconnectOnDevice(self):
+        self.setAutoconnectOnDevice(False)
+
+    def setAutoconnectOnDevice(self, what):
+        dev_proxy, iface = self.getDeviceProxyAndIface()
+        prop_iface = dbus.Interface(dev_proxy, "org.freedesktop.DBus.Properties")
+        prop_iface.Set("org.freedesktop.NetworkManager.Device", "Autoconnect", dbus.Boolean(what))
+
+
 
     def getConnections(self):
         wifi_iface, wifi_prop_iface = self.getWiFiIface()
@@ -159,7 +181,8 @@ class WirelessClient:
     def scanAndWait(self):
         lastScan = self.getLastScanOfWireless()
         oldLastScan = lastScan
-        self.requestWirelessScan()
+        while self.requestWirelessScan() == False:
+            time.sleep(1)
         while oldLastScan == lastScan:
             time.sleep(0.1)
             lastScan = self.getLastScanOfWireless()
@@ -170,9 +193,17 @@ class WirelessClient:
     def scanInAccessPointMode(self):
         if(self.isCurrentConnectionHotSpot()):
             uuidOf = self.getCurrentConnectionUuid()
+            self.disableAutoconnectOnDevice()
             self.deactivateCurrentConnection()
-            aps = self.scanAndWait()
+            aps = []
+            try:
+                aps = self.scanAndWait()
+                aps = self.scanAndWait()
+            except Exception as e:
+                print(e)
+                pass
             self.activateConnectionByUuid(uuidOf)
+            self.enableAutoconnectOnDevice()
             return aps
         else:
             return self.scanAndWait()
@@ -216,6 +247,17 @@ class WirelessClient:
             return True
         else:
             return False
+
+    def deleteConnectionByUuid(self, uuid):
+        path = self.networkingClient.getConnectionPathByUuid(uuid)
+        if(path):
+            proxy = self.bus.get_object("org.freedesktop.NetworkManager", path)
+            connection = dbus.Interface(proxy, "org.freedesktop.NetworkManager.Settings.Connection")
+            connection.Delete()
+            return True
+        return False
+
+
 
     
     def activateConnectionByUuid(self, uuid):
