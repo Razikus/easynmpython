@@ -18,7 +18,7 @@ setuptools.setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ),
+    # It requires DBUS python3-dbus python-dbus
     install_requires=[
-        "dbus-python==1.2.16"
     ]
 )
