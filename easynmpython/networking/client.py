@@ -20,6 +20,19 @@ class NetworkingClient:
             conns.append({"uuid": uuid, "path": conn, "settings": sett})
         return conns
 
+    def disableWireless(self):
+        proxy = self.bus.get_object("org.freedesktop.NetworkManager", "/org/freedesktop/NetworkManager")
+        prop_iface = dbus.Interface(proxy, "org.freedesktop.DBus.Properties")
+        prop_iface.Set("org.freedesktop.NetworkManager", "WirelessEnabled", dbus.Boolean(False))
+
+    
+    def enableWireless(self):
+        proxy = self.bus.get_object("org.freedesktop.NetworkManager", "/org/freedesktop/NetworkManager")
+        prop_iface = dbus.Interface(proxy, "org.freedesktop.DBus.Properties")
+        prop_iface.Set("org.freedesktop.NetworkManager", "WirelessEnabled", dbus.Boolean(True))
+
+
+
     def getConnectionByUuid(self, uuidToSearch):
         proxy = self.bus.get_object("org.freedesktop.NetworkManager", "/org/freedesktop/NetworkManager/Settings")
         settings = dbus.Interface(proxy, "org.freedesktop.NetworkManager.Settings")

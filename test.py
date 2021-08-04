@@ -17,12 +17,12 @@ wireless = WirelessClient(bus, wDevice)
 # print(json.dumps(aps))
 uuider = "3fb431e3-250e-4bc2-886e-d8705ea25661"
 # try:
-#     wireless.addHotspot("testowy3", "ACoTyTuRobis", uuider)
+#     wireless.addHotspot("testowy3", "XXXXXXXXXXX", uuider)
 # except:
 #     pass
 
 # try:
-#     wireless.addWifiConnection("AiE", "ACoTyTuRobis", str(uuid.uuid4()))
+#     wireless.addWifiConnection("XX", "XX", str(uuid.uuid4()))
 # except:
 #     pass
 # wireless.activateConnectionByUuid(uuider)
@@ -32,7 +32,7 @@ uuider = "3fb431e3-250e-4bc2-886e-d8705ea25661"
 # print(caps)
 # wireless.deactivateCurrentConnection()
 # print(wireless.isCurrentConnectionHotSpot())
-# aps = wireless.scanInAccessPointMode()
+#   
 # print(aps)
 # print(wireless.getDeviceName())
 print(json.dumps(wireless.getConnections()))

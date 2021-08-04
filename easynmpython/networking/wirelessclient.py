@@ -199,7 +199,7 @@ class WirelessClient:
         return aps
     
 
-    async def scanAndWaitAsync(self, maxWait = 10):
+    async def scanAndWaitAsync(self, maxWait = 60):
         lastScan = self.getLastScanOfWireless()
         oldLastScan = lastScan
         waiting = 0
@@ -207,14 +207,14 @@ class WirelessClient:
             await asyncio.sleep(1)
             waiting = waiting + 1
             if(waiting >= maxWait):
-                raise Exception("Too long to wait")
+                raise Exception("Too long to wait rws", waiting, maxWait)
         waiting = 0
         while oldLastScan == lastScan:
             await asyncio.sleep(0.1)
             lastScan = self.getLastScanOfWireless()
             waiting = waiting + 0.1
             if(waiting >= maxWait):
-                raise Exception("Too long to wait")
+                raise Exception("Too long to wait seconds scan", maxWait)
 
         aps = self.getAccessPoints()
         return aps
@@ -242,11 +242,15 @@ class WirelessClient:
             uuidOf = self.getCurrentConnectionUuid()
             self.disableAutoconnectOnDevice()
             self.deactivateCurrentConnection()
+            self.networkingClient.disableWireless()
+            await asyncio.sleep(2)
+            self.networkingClient.enableWireless()
+            await asyncio.sleep(2)
             aps = []
             try:
                 aps = await self.scanAndWaitAsync()
-                aps = await self.scanAndWaitAsync()
             except Exception as e:
+                print(e, flush=True)
                 pass
             self.activateConnectionByUuid(uuidOf)
             self.enableAutoconnectOnDevice()
