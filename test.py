@@ -1,7 +1,7 @@
-from sdc.networking.client import NetworkingClient
-from sdc.networking.devicetype import DeviceType
-from sdc.networking.wirelessclient import WirelessClient
-from sdc.networking.wificapability import WifiCapability
+from easynmpython.networking.client import NetworkingClient
+from easynmpython.networking.devicetype import DeviceType
+from easynmpython.networking.wirelessclient import WirelessClient
+from easynmpython.networking.wificapability import WifiCapability
 import dbus
 import json
 import uuid
@@ -35,4 +35,5 @@ uuider = "3fb431e3-250e-4bc2-886e-d8705ea25661"
 #   
 # print(aps)
 # print(wireless.getDeviceName())
-print(json.dumps(wireless.getConnections()))
+# print(json.dumps(wireless.getConnections()))
+assert wireless.getAssociatedIpAddress() != None

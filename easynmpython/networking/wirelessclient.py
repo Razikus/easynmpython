@@ -43,6 +43,13 @@ class WirelessClient:
         prop_iface = dbus.Interface(dev_proxy, "org.freedesktop.DBus.Properties")
         prop_iface.Set("org.freedesktop.NetworkManager.Device", "Autoconnect", dbus.Boolean(what))
 
+    def getAssociatedIpAddress(self):
+        dev_proxy, iface = self.getDeviceProxyAndIface()
+        prop_iface = dbus.Interface(dev_proxy, "org.freedesktop.DBus.Properties")
+        a = prop_iface.Get("org.freedesktop.NetworkManager.Device", "Ip4Address")
+        ipaddr = str(a & 0xFF) + "." + str(a>>8 & 0xFF) + "." + str(a>>16 & 0xFF) + "." + str(a>>24 & 0xFF)
+        return ipaddr
+
 
 
     def getConnections(self):
